@@ -1,0 +1,66 @@
+import pool from './database';
+import bcrypt from 'bcrypt';
+
+async function initializeDatabase() {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    // Create users table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        btc_wallet VARCHAR(255) DEFAULT NULL,
+        btc_balance DECIMAL(18,8) DEFAULT 0,
+        eth_wallet VARCHAR(255) DEFAULT NULL,
+        eth_balance DECIMAL(18,8) DEFAULT 0,
+        bnb_wallet VARCHAR(255) DEFAULT NULL,
+        bnb_balance DECIMAL(18,8) DEFAULT 0,
+        usdt_wallet VARCHAR(255) DEFAULT NULL,
+        usdt_balance DECIMAL(18,8) DEFAULT 0,
+        xrp_wallet VARCHAR(255) DEFAULT NULL,
+        xrp_balance DECIMAL(18,8) DEFAULT 0,
+        sol_wallet VARCHAR(255) DEFAULT NULL,
+        sol_balance DECIMAL(18,8) DEFAULT 0,
+        is_admin BOOLEAN DEFAULT false,
+        is_approved BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create messages table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        message TEXT NOT NULL,
+        is_bot BOOLEAN DEFAULT false,
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    `);
+
+    // Create default admin user
+    const [admins] = await connection.execute('SELECT * FROM users WHERE is_admin = true');
+    if (!Array.isArray(admins) || admins.length === 0) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await connection.execute(
+        'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, true)',
+        ['Admin', 'admin@xbit.com', hashedPassword]
+      );
+    }
+
+    console.log('✅ Database initialized successfully');
+  } catch (error) {
+    console.error('❌ Database initialization failed:', error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+export { initializeDatabase }; 
