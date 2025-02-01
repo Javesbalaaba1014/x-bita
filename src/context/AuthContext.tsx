@@ -1,57 +1,38 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types/user';
-import { login as authLogin } from '../services/auth';
+
+interface User {
+  username: string;
+  email: string;
+  id: number;
+}
 
 interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
 }
 
-const defaultContext: AuthContextType = {
-  user: null,
-  setUser: () => {},
-  login: async () => { throw new Error('Not implemented') },
-  logout: () => {}
-};
-
-const AuthContext = createContext(defaultContext);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
-  const login = async (email: string, password: string) => {
-    const userData = await authLogin(email, password);
-    setUser(userData);
-    return userData;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Update localStorage when user state changes
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
-  }, [user]);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

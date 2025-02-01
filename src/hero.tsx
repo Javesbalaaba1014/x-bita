@@ -13,12 +13,7 @@ import {
 } from 'chart.js';
 import bitcoinIcon from './assets/bitcoin.svg';
 import binanceIcon from './assets/binance.svg';
-import ethereumIcon from './assets/ethereum.svg';
-import xrpIcon from './assets/xrp.svg';
-import usdtIcon from './assets/usdt.svg';
-import solanaIcon from './assets/solana.svg';
-import FloatingNotifications from './components/FloatingNotifications';
-import Rating from './components/Rating';
+import Stats from './components/Stats';
 
 ChartJS.register(
   CategoryScale,
@@ -95,34 +90,22 @@ const CryptoCard = ({ icon, name, label, price, change, chartData }: {
 const Hero: React.FC = () => {
   const [prices, setPrices] = useState({
     BTC: { price: 0, change: 0, chartData: [] },
-    BNB: { price: 0, change: 0, chartData: [] },
-    ETH: { price: 0, change: 0, chartData: [] },
-    XRP: { price: 0, change: 0, chartData: [] },
-    USDT: { price: 0, change: 0, chartData: [] },
-    SOL: { price: 0, change: 0, chartData: [] }
+    BNB: { price: 0, change: 0, chartData: [] }
   });
 
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const [priceRes, btcHistory, bnbHistory, ethHistory, xrpHistory, usdtHistory, solHistory] = await Promise.all([
-          fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,binancecoin,ethereum,ripple,tether,solana&vs_currencies=usd&include_24hr_change=true'),
+        const [priceRes, btcHistory, bnbHistory] = await Promise.all([
+          fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,binancecoin&vs_currencies=usd&include_24hr_change=true'),
           fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily'),
-          fetch('https://api.coingecko.com/api/v3/coins/binancecoin/market_chart?vs_currency=usd&days=7&interval=daily'),
-          fetch('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=7&interval=daily'),
-          fetch('https://api.coingecko.com/api/v3/coins/ripple/market_chart?vs_currency=usd&days=7&interval=daily'),
-          fetch('https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=usd&days=7&interval=daily'),
-          fetch('https://api.coingecko.com/api/v3/coins/solana/market_chart?vs_currency=usd&days=7&interval=daily')
+          fetch('https://api.coingecko.com/api/v3/coins/binancecoin/market_chart?vs_currency=usd&days=7&interval=daily')
         ]);
 
-        const [priceData, btcHistoryData, bnbHistoryData, ethHistoryData, xrpHistoryData, usdtHistoryData, solHistoryData] = await Promise.all([
+        const [priceData, btcHistoryData, bnbHistoryData] = await Promise.all([
           priceRes.json(),
           btcHistory.json(),
-          bnbHistory.json(),
-          ethHistory.json(),
-          xrpHistory.json(),
-          usdtHistory.json(),
-          solHistory.json()
+          bnbHistory.json()
         ]);
 
         setPrices({
@@ -135,26 +118,6 @@ const Hero: React.FC = () => {
             price: priceData.binancecoin.usd,
             change: priceData.binancecoin.usd_24h_change,
             chartData: bnbHistoryData.prices.map(([_, price]: [number, number]) => price)
-          },
-          ETH: {
-            price: priceData.ethereum.usd,
-            change: priceData.ethereum.usd_24h_change,
-            chartData: ethHistoryData.prices.map(([_, price]: [number, number]) => price)
-          },
-          XRP: {
-            price: priceData.ripple.usd,
-            change: priceData.ripple.usd_24h_change,
-            chartData: xrpHistoryData.prices.map(([_, price]: [number, number]) => price)
-          },
-          USDT: {
-            price: priceData.tether.usd,
-            change: priceData.tether.usd_24h_change,
-            chartData: usdtHistoryData.prices.map(([_, price]: [number, number]) => price)
-          },
-          SOL: {
-            price: priceData.solana.usd,
-            change: priceData.solana.usd_24h_change,
-            chartData: solHistoryData.prices.map(([_, price]: [number, number]) => price)
           }
         });
       } catch (error) {
@@ -169,9 +132,7 @@ const Hero: React.FC = () => {
 
   return (
     <>
-      <div className="h-14 bg-[#1E1B2E]"></div>
-      <FloatingNotifications />
-      <div className="relative min-h-screen bg-[#1E1B2E] flex items-center pt-24">
+      <div className="relative min-h-screen bg-[#1E1B2E] flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -187,13 +148,13 @@ const Hero: React.FC = () => {
                 Only at X-BIT, you can build a good portfolio and learn best practices about cryptocurrency.
               </p>
               <button className="relative bg-gradient-to-r from-[#00E3A5] to-[#00c48f] text-white px-8 py-3 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-[#00E3A5]/50 hover:scale-105">
-                Invest Now
+                Get Started
               </button>
             </div>
 
             <div className="mt-16">
               <h2 className="text-2xl font-bold text-white mb-8">Market Trend</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <CryptoCard
                   icon={bitcoinIcon}
                   name="BTC"
@@ -210,47 +171,14 @@ const Hero: React.FC = () => {
                   change={prices.BNB.change}
                   chartData={prices.BNB.chartData}
                 />
-                <CryptoCard
-                  icon={ethereumIcon}
-                  name="ETH"
-                  label="ETHEREUM"
-                  price={prices.ETH.price}
-                  change={prices.ETH.change}
-                  chartData={prices.ETH.chartData}
-                />
-                <CryptoCard
-                  icon={xrpIcon}
-                  name="XRP"
-                  label="RIPPLE"
-                  price={prices.XRP.price}
-                  change={prices.XRP.change}
-                  chartData={prices.XRP.chartData}
-                />
-                <CryptoCard
-                  icon={usdtIcon}
-                  name="USDT"
-                  label="TETHER"
-                  price={prices.USDT.price}
-                  change={prices.USDT.change}
-                  chartData={prices.USDT.chartData}
-                />
-                <CryptoCard
-                  icon={solanaIcon}
-                  name="SOL"
-                  label="SOLANA"
-                  price={prices.SOL.price}
-                  change={prices.SOL.change}
-                  chartData={prices.SOL.chartData}
-                />
               </div>
             </div>
           </motion.div>
         </div>
       </div>
-      <Rating />
+      <Stats />
     </>
   );
 };
 
 export default Hero;
-

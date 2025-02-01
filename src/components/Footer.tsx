@@ -70,7 +70,7 @@ const Footer: React.FC = () => {
             <h3 className="text-white font-bold mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-gray-400">
-                <span className="text-[#00E3A5]">Email:</span> support@xbitaitrade.com/
+                <span className="text-[#00E3A5]">Email:</span> support@xbit.ai
               </li>
               <li className="text-gray-400">
                 <span className="text-[#00E3A5]">Address:</span> 123 Crypto Street, Digital City, DC 12345
