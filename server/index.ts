@@ -4,6 +4,17 @@ import bcrypt from 'bcrypt';
 import pool from './database';
 import { RowDataPacket } from 'mysql2';
 import { Request as ExpressRequest } from 'express';
+import dotenv from 'dotenv';
+import { testConnection } from './database';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Load environment variables
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Extend Express Request type
 interface CustomRequest extends ExpressRequest {
@@ -14,15 +25,33 @@ interface CustomRequest extends ExpressRequest {
 }
 
 const app = express();
+const port = process.env.PORT || 3001;
 
-// Basic CORS setup
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://www.xbitaitrade.com/' : 'http://localhost:3001', // Frontend URL
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Accept']
-}));
+// Middleware
 app.use(express.json());
+app.use(cors({
+  origin: [
+    'http://localhost:3000', 
+    'https://www.xbitaitrade.com',
+    'https://xbit.vercel.app',
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+  ].filter(Boolean) as string[],
+  credentials: true
+}));
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Test database connection
+testConnection()
+  .then(connected => {
+    if (!connected) {
+      console.error('Unable to connect to database. Server will continue to run, but database operations will fail.');
+    }
+  })
+  .catch(error => {
+    console.error('Database connection test failed:', error);
+  });
 
 // Log all requests
 app.use((req, res, next) => {
@@ -196,5 +225,25 @@ app.post('/auth/register', registerHandler);
 
 // Admin routes
 app.get('/api/admin/users', isAdmin, getUsers);
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    message: 'Something broke!',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+});
 
 export default app; 

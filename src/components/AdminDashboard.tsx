@@ -1,12 +1,15 @@
 import React from 'react';
-import { useAuth } from '../context/AuthContext';
+import { User } from '../types/user';  // Import the User type
 import { Navigate } from 'react-router-dom';
 
-const AdminDashboard = () => {
-  const { user } = useAuth();
+interface AdminDashboardProps {
+  user: User;
+  // ... other props
+}
 
-  // Redirect if not admin
-  if (!user?.isAdmin) {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
+  // Change isAdmin to is_admin to match the type definition
+  if (!user.is_admin) {
     return <Navigate to="/login" replace />;
   }
 

@@ -7,7 +7,7 @@ import Register from './components/auth/Register'
 import Investment from './components/Investment'
 import Learn from './components/Learn'
 import Footer from './components/Footer'
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ChatBot from './components/common/ChatBot';
 import ChatAdmin from './components/admin/ChatAdmin';
 import AdminDashboard from './components/AdminDashboard';
@@ -53,6 +53,8 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const { user } = useAuth();
+
   return (
     <AuthProvider>
       <NotificationProvider>
@@ -73,12 +75,23 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/learn" element={<Learn />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={
+                <AdminRoute>
+                  <AdminDashboard user={user || { id: 0, name: '', username: '', email: '', is_admin: false, is_approved: false, wallet_address: null, balance: 0, token_balance: 0, created_at: '' }} />
+                </AdminRoute>
+              } />
+              <Route path="/admin/dashboard" element={
+                <AdminRoute>
+                  <AdminDashboard user={user || { id: 0, name: '', username: '', email: '', is_admin: false, is_approved: false, wallet_address: null, balance: 0, token_balance: 0, created_at: '' }} />
+                </AdminRoute>
+              } />
               <Route path="/admin/*" element={
                 <AdminRoute>
                   <AdminLayout>
                     <Routes>
-                      <Route path="/" element={<AdminDashboard />} />
+                      <Route path="/" element={
+                        <AdminDashboard user={user || { id: 0, name: '', username: '', email: '', is_admin: false, is_approved: false, wallet_address: null, balance: 0, token_balance: 0, created_at: '' }} />
+                      } />
                       <Route path="users" element={<UserManagement />} />
                       <Route path="chat" element={<ChatAdmin />} />
                     </Routes>

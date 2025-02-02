@@ -1,12 +1,7 @@
 import mysql from 'mysql2/promise';
 import { dbConfig } from './config';
 
-const pool = mysql.createPool({
-  ...dbConfig,
-  connectionLimit: 10,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
-});
+export const pool = mysql.createPool(dbConfig);
 
 export const testConnection = async () => {
   let connection;
